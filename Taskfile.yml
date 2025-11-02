@@ -1,0 +1,16 @@
+version: '1'
+
+tasks:
+  start:
+    cmds:
+      # run NPM Install for the package.json in the /frontend-ssr/crashercon-ssr/ directory
+      # The node_modules will be installed in the /frontend-ssr/crashercon-ssr/ directory
+      - cd frontend/eydsh-ssr && npm install
+      - cd ../../
+      - docker compose up postgres-local chat-local
+  start-chat:
+    cmds:
+      - docker compose up postgres-local chat-local
+  stop:
+    cmds:
+      - docker compose down

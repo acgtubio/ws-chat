@@ -1,0 +1,64 @@
+networks:
+  chat_network:
+
+# TODO: Add healthcheck
+services:
+  postgres-local:
+    container_name: postgres-eydsh
+    image: postgres
+    restart: always
+    env_file:
+      - ./.env.local
+    volumes:
+      - postgres_data:/data/db
+    networks:
+      - chat_network
+
+  postgres:
+    container_name: postgres-eydsh
+    image: postgres
+    restart: always
+    env_file:
+      - ./.env
+    volumes:
+      - postgres_data:/data/db
+    networks:
+      - chat_network
+
+  chat-local:
+    container_name: chat
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      target: backend
+    env_file:
+      - ./.env.local
+    volumes:
+      - ./:/eydsh/:rw,delegated
+    depends_on:
+      - postgresql-local
+    ports:
+      - 8080:8080
+    networks:
+      - chat_network
+
+  chat:
+    container_name: chat
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      target: backend
+    env_file:
+      - ./.env
+    volumes:
+      - ./:/eydsh/:rw,delegated
+    depends_on:
+      - postgresql
+    ports:
+      - 8080:8080
+    networks:
+      - chat_network
+
+volumes:
+  postgres_data:
+    name: postgres_data
