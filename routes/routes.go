@@ -15,10 +15,10 @@ type RouterDependencies struct {
 func SetupRoutes(dependencies *RouterDependencies) (*mux.Router, error) {
 	mux := mux.NewRouter()
 
-	mux.Path("/api/chat").
+	mux.Path("/api/chat/{id}").
 		Handler(
 			chat.NewChatHandler(dependencies.Logger, dependencies.Hub),
 		)
 
-	return nil, nil
+	return mux, nil
 }

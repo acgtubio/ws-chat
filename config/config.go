@@ -10,7 +10,7 @@ type PostgresConfig struct {
 }
 
 type ApplicationConfig struct {
-	Port string `envconfig:"APP_PORT" default:"8080"`
+	Port int16 `envconfig:"APP_PORT" default:"8080"`
 }
 
 type Config struct {

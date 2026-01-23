@@ -18,14 +18,14 @@ func (c *ChatHub) run() {
 			c.clients[client] = true
 		case client := <-c.unregister:
 			delete(c.clients, client)
-			close(client.Send)
+			close(client.Receive)
 		// TODO: Remove broadcast
 		case msg := <-c.broadcast:
 			for client := range c.clients {
 				select {
-				case client.Send <- msg:
+				case client.Receive <- msg:
 				default:
-					close(client.Send)
+					close(client.Receive)
 					delete(c.clients, client)
 				}
 			}
@@ -35,7 +35,7 @@ func (c *ChatHub) run() {
 
 // BroadcastChan returns a channel for receiving messages.
 // This is used to broadcast to all clients.
-func (c *ChatHub) BroadcastChan() <-chan Message {
+func (c *ChatHub) BroadcastChan() chan<- Message {
 	return c.broadcast
 }
 
@@ -43,8 +43,8 @@ func (c *ChatHub) Register(client *Client) {
 	c.register <- client
 }
 
-func (c *ChatHub) Unregister(client *Client) {
-	c.unregister <- client
+func (c *ChatHub) UnregisterChan() chan<- *Client {
+	return c.unregister
 }
 
 func NewChatHub() *ChatHub {

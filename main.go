@@ -6,13 +6,14 @@ import (
 
 	"github.com/acgtubio/ws-chat/config"
 	"github.com/acgtubio/ws-chat/internal/chat"
+	"github.com/acgtubio/ws-chat/internal/logger"
 	"github.com/acgtubio/ws-chat/routes"
 )
 
 func main() {
 	// ctx := context.Background()
 
-	logger := NewLogger()
+	logger := logger.NewLogger()
 	cfg, err := config.NewConfig()
 	if err != nil {
 		panic(err)
@@ -25,8 +26,10 @@ func main() {
 		}
 	}()
 
+	hub := chat.NewChatHub()
 	routerDependencies := &routes.RouterDependencies{
 		Logger: logger,
+		Hub:    hub,
 	}
 	router, err := routes.SetupRoutes(routerDependencies)
 	if err != nil {
@@ -37,7 +40,6 @@ func main() {
 	}
 
 	// Starts a goroutine here for the hub.
-	hub := chat.NewChatHub()
 	chat.InitializeChat(logger, hub)
 
 	logger.Infow("Chat service is running.",

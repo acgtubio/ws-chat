@@ -47,10 +47,12 @@ func (d *chatHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	client := &chat.Client{
-		Id:      userID,
-		Conn:    conn,
-		Send:    make(chan chat.Message),
-		Receive: d.hub.BroadcastChan(),
+		Id:         userID,
+		Conn:       conn,
+		Send:       d.hub.BroadcastChan(),
+		Receive:    make(chan chat.Message),
+		Unregister: d.hub.UnregisterChan(),
+		Logger:     d.logger,
 	}
 
 	d.hub.Register(client)
