@@ -2,12 +2,14 @@ package routes
 
 import (
 	"github.com/acgtubio/ws-chat/handlers/chat"
+	hub "github.com/acgtubio/ws-chat/internal/chat"
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 )
 
 type RouterDependencies struct {
 	Logger *zap.SugaredLogger
+	Hub    *hub.ChatHub
 }
 
 func SetupRoutes(dependencies *RouterDependencies) (*mux.Router, error) {
@@ -15,7 +17,7 @@ func SetupRoutes(dependencies *RouterDependencies) (*mux.Router, error) {
 
 	mux.Path("/api/chat").
 		Handler(
-			chat.NewChatHandler(dependencies.Logger),
+			chat.NewChatHandler(dependencies.Logger, dependencies.Hub),
 		)
 
 	return nil, nil

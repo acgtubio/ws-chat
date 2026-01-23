@@ -37,8 +37,8 @@ func main() {
 	}
 
 	// Starts a goroutine here for the hub.
-	logger.Infow("Starting chat rooms.")
-	chat.InitializeChat(logger)
+	hub := chat.NewChatHub()
+	chat.InitializeChat(logger, hub)
 
 	logger.Infow("Chat service is running.",
 		"port", cfg.Application.Port,
