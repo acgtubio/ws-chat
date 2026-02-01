@@ -26,7 +26,7 @@ func main() {
 		}
 	}()
 
-	hub := chat.NewChatHub()
+	hub := chat.NewChatHub(logger)
 	routerDependencies := &routes.RouterDependencies{
 		Logger: logger,
 		Hub:    hub,

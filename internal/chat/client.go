@@ -15,12 +15,22 @@ const (
 )
 
 type Client struct {
-	Id         string
-	Conn       *websocket.Conn
-	Receive    chan Message // Channel for receiving data from the hub.
-	Send       chan<- Message
-	Unregister chan<- *Client
-	Logger     *zap.SugaredLogger
+	Id      string
+	Conn    *websocket.Conn
+	Receive chan Message // Channel for receiving data from the room.
+	Logger  *zap.SugaredLogger
+	rooms   map[string]*Room
+}
+
+// TODO: rooms should be based on the available rooms of the client. Add this functionality when introducing persistent mesesages.
+func NewClient(id string, conn *websocket.Conn, logger *zap.SugaredLogger) *Client {
+	return &Client{
+		Id:      id,
+		Conn:    conn,
+		Logger:  logger,
+		Receive: make(chan Message),
+		rooms:   make(map[string]*Room),
+	}
 }
 
 func (c *Client) WriteLoop() {
@@ -72,9 +82,18 @@ func (c *Client) WriteLoop() {
 	}
 }
 
+func (c *Client) unregister() {
+	for _, room := range c.rooms {
+		room.EmitEvent(RoomEvent{
+			EventType: Leave,
+			Member:    c,
+		})
+	}
+}
+
 func (c *Client) ReadLoop() {
 	defer func() {
-		c.Unregister <- c
+		c.unregister()
 		c.Conn.Close()
 	}()
 
@@ -102,7 +121,37 @@ func (c *Client) ReadLoop() {
 			break
 		}
 
-		// Send message to the broadcast in the hub.
-		c.Send <- msg
+		// TODO: Add additional author id validation later that is based on authentication.
+		if msg.AuthorID == "" {
+			c.Logger.Errorw("Empty author id.")
+			break
+		}
+
+		// TODO: Add a custom message that will be received by the user. Not sure if connection should be dropped.
+		if msg.Room == "" {
+			c.Logger.Errorw("Empty room.")
+			break
+		}
+
+		if msg.Timestamp.IsZero() {
+			msg.Timestamp = time.Now()
+		}
+
+		c.sendMessage(msg)
 	}
+
+	c.Logger.Debugw("closing read loop for client", "client", c.Id)
+}
+
+func (c *Client) JoinRoom(r *Room) {
+	c.rooms[r.Id] = r
+}
+
+func (c *Client) sendMessage(msg Message) {
+	room, ok := c.rooms[msg.Room]
+	if !ok {
+		return
+	}
+
+	room.Broadcast(msg)
 }

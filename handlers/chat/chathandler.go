@@ -13,6 +13,7 @@ import (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+	CheckOrigin:     func(r *http.Request) bool { return true },
 }
 
 type chatHandler struct {
@@ -46,16 +47,12 @@ func (d *chatHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-	client := &chat.Client{
-		Id:         userID,
-		Conn:       conn,
-		Send:       d.hub.BroadcastChan(),
-		Receive:    make(chan chat.Message),
-		Unregister: d.hub.UnregisterChan(),
-		Logger:     d.logger,
-	}
+	client := chat.NewClient(userID, conn, d.logger)
 
-	d.hub.Register(client)
+	d.hub.EmitHubEvent(chat.HubEvent{
+		Client: client,
+		Room:   "0",
+	})
 
 	go client.ReadLoop()
 	go client.WriteLoop()
